@@ -46,7 +46,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid Credentials" });
     delete user.password;
 
-    await User.findByIdAndUpdate(user._id,{active:true});
+    await User.findByIdAndUpdate(user._id, { active: true });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRETE_KEY);
     console.log(user);
@@ -58,7 +58,7 @@ export const login = async (req, res) => {
 
 export const logOut = async (req, res) => {
   try {
-    console.log("logout")
+    console.log("logout");
     let id = req.params.id;
     let user = await User.findById(id);
     await User.findByIdAndUpdate(id, { active: false });
@@ -66,4 +66,20 @@ export const logOut = async (req, res) => {
   } catch (err) {
     res.status(500).json(err);
   }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    let user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(403).json("User Not Found")
+    }
+    const salt = await bcrypt.genSalt();
+    const passwordHashed = await bcrypt.hash(password, salt);
+    await User.updateOne({ email: email }, { $set: {password:passwordHashed} });
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({error})}
 };

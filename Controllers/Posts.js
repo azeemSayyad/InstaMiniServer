@@ -70,21 +70,42 @@ export const likePost = async (req, res) => {
 
 export const commentPost = async (req, res) => {
   try {
-    let { comment, picturePath ,name} = req.body;
+    let { comment, commentedUserId } = req.body;
     let { postId } = req.params;
 
-    let val = {};
-    val[name] = [comment,picturePath];
-    const post = await Post.findById(postId);
-    console.log(post)
-    post.comments.push(val);
+    const {comments} = await Post.findById(postId);
+    const { firstName, picturePath } = await User.findById(commentedUserId);
+    console.log("78")
+
+    let val = {
+      comment,
+      name: firstName,
+      picturePath,
+      commentedUserId,
+    };
+    comments.push(val);
+    console.log("87")
     const updatedPost = await Post.findByIdAndUpdate(
       postId,
-      { comments: post.comments },
+      { comments: comments },
       { new: true }
     );
+    console.log("92")
+
     res.status(200).json(updatedPost);
   } catch (err) {
-    res.status(400).json({error:err});
+    res.status(400).json({ error: err });
+  }
+};
+
+export const deletePost = async (req, res) => {
+  try {
+    let { postId } = req.params;
+    await Post.findByIdAndDelete(postId);
+
+    let posts = await Post.find();
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(500).json(err);
   }
 };
